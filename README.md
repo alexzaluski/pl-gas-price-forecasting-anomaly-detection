@@ -1,6 +1,6 @@
 # Gas Price Forecasting & Anomaly Detection
 
-Time series analysis of monthly heating costs — full pipeline from data cleaning through anomaly detection to SARIMA forecasting and Prophet comparison. Includes detection and explanation of the February 2022 energy price spike caused by the Russian invasion of Ukraine.
+Time series analysis of monthly heating costs in Poland — full pipeline from data cleaning through anomaly detection to SARIMA forecasting and Prophet comparison. Includes detection and explanation of the February 2022 energy price spike caused by the Russian invasion of Ukraine.
 
 **Stack**: Python · pandas · statsmodels (SARIMA, STL) · Prophet · matplotlib · scipy
 
@@ -17,7 +17,7 @@ Time series analysis of monthly heating costs — full pipeline from data cleani
 
 - **Classic decomposition**: outlier contaminated trend/seasonal estimates → anomaly appeared normal in residuals
 - **STL decomposition (`robust=True`)**: down-weights extreme points during fitting, producing reliable residuals
-- Z-score at **3σ** detected primary anomaly (2022-02, z = 5.88); lowering to **2σ** revealed a _ghost anomaly_ (2022-03, z = 2.71) — carry-over from supply disruptions
+- Z-score at **3σ** detected primary anomaly (2022-02, z = 5.88); lowering to **2σ** revealed a second anomaly (2022-03, z = 2.71) — possibly a carry-over from supply disruptions
 - Both anomalies replaced with their STL expected values (`trend + seasonal`)
 
 | Date    | Actual  | STL Expected | Excess           | Z-score |
@@ -48,11 +48,11 @@ Three candidates evaluated on MSE over a held-out 12-month test set:
 | SARIMA(1,1,0)(1,1,0,12)     | 0.3304         |
 | SARIMA(1,1,1)(1,1,1,12)     | 0.3385         |
 
-**Winner**: `SARIMA(0,1,1)(0,1,1,12)` — best on all metrics. MA terms capture short-term shocks; seasonal MA handles yearly patterns.
+**Winner**: `SARIMA(0,1,1)(0,1,1,12)`
 
 ### 5. Model Diagnostics
 
-Residuals of the final model: oscillate around 0, roughly normally distributed (histogram + Q-Q), no visible pattern → consistent with white noise ✓
+Residuals of the final model: oscillate around 0, roughly normally distributed (histogram + Q-Q), no visible pattern → consistent with white noise
 
 ### 6. Forecast Comparison: SARIMA vs Prophet
 
@@ -62,9 +62,6 @@ Residuals of the final model: oscillate around 0, roughly normally distributed (
 | SARIMA — anomalies removed  | **1517.9**       | 4974.0 | 127.8 |
 | Prophet — anomalies removed | 989.7            | 2487.9 | 155.8 |
 
-- Removing anomalies shifted the SARIMA mean forecast upward — the model no longer averages the extraordinary spike into its baseline, revealing the higher underlying cost trend
-- Prophet predicts significantly lower peak costs (~2488 vs ~4974), reflecting its tendency to smooth structural breaks rather than propagate them
-
 ---
 
 ## Key Findings
@@ -72,7 +69,7 @@ Residuals of the final model: oscillate around 0, roughly normally distributed (
 - STL with `robust=True` is essential in the presence of outliers — classic decomposition masked the anomaly
 - The 2σ threshold catches ghost anomalies that 3σ misses
 - The February 2022 spike (+99.9%, z = 5.88) is statistically unambiguous and causally linked to the energy crisis
-- SARIMA and Prophet agree on seasonal pattern but diverge sharply on peak magnitude (~2× difference)
+- SARIMA and Prophet diverge sharply on peak magnitude (~2× difference)
 
 ---
 
